@@ -8779,6 +8779,20 @@ Object.assign( THREE.Object3D.prototype, THREE.EventDispatcher.prototype, {
 
 	},
 
+	addArr: function( arr ) {
+		if (! arr instanceof Array)
+			console.error( "THREE.Object3D.addArr: parameter is not an array.", arr );
+		var x;
+		for ( x in arr) {
+			if ( arr[x] instanceof THREE.Object3D ) {
+				arr[x].parent = this;
+				arr[x].dispatchEvent({type:'added'});
+				this.children.push(arr[x]);
+			}
+
+		}
+	},
+
 	remove: function ( object ) {
 
 		if ( arguments.length > 1 ) {

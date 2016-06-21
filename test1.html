@@ -4,17 +4,25 @@
     <meta charset="UTF-8">
     <title>Three.js Example 1</title>
     <script src="./js/three/three.js"></script>
+    <script src="./js/map.js"></script>
+    <script src="./js/loaders/MTLLoader.js"></script>
+    <script src="./js/loaders/OBJLoader.js"></script>
+    <script src="./js/loaders/DDSLoader.js"></script>
+    <script src="./js/keyboard/keyboard.js"></script>
     <style type="text/css">
         div#canvas-frame{
             border: none;
             cursor: pointer;
-            width: 600px;
-            height: 600px;
+            width: 1280px;
+            height: 768px;
             background-color: #EEEEEE;
         }
     </style>
     <script>
         var renderer;
+        var width, height;
+        var manPos = {x:0,y:0,z:0};
+        var manObj;
         function initThree() {
             width = document.getElementById('canvas-frame').clientWidth;
             height = document.getElementById('canvas-frame').clientHeight;
@@ -28,9 +36,9 @@
         var camera;
         function initCamera() {
             camera = new THREE.PerspectiveCamera( 45 , width / height , 1 , 10000 );
-            camera.position.x = 100;
-            camera.position.y = 50;
-            camera.position.z = 50;
+            camera.position.x = -20;
+            camera.position.y = -20;
+            camera.position.z = 20;
             camera.up.x = 0;
             camera.up.y = 0;
             camera.up.z = 1;
@@ -69,7 +77,8 @@
                     new THREE.SphereGeometry(20, 20, 20),
                     new THREE.MeshLambertMaterial({map: texture1})
             );
-            scene.add(sphere);
+//            scene.add(sphere);
+
             sphere.position.set(0,0,0);
 
 //            plane = new THREE.Mesh(
@@ -79,6 +88,52 @@
 //            scene.add(plane);
 //            plane.position.set(0,0,0);
 //            plane.receiveShadow = true;
+
+            /*Add an axis*/
+            var axis = getAxisArr(10);
+            scene.addArr(axis);
+
+            /*Add an geo-ground*/
+            var geoGround = getGeoMap();
+            scene.add(geoGround);
+
+            /*Add an player*/
+//            var robot = getRobot();
+//            scene.add(robot);
+
+            var onProgress = function ( xhr ) {
+                if ( xhr.lengthComputable ) {
+                    var percentComplete = xhr.loaded / xhr.total * 100;
+                    console.log( Math.round(percentComplete, 2) + '% downloaded' );
+                }
+            };
+
+            var onError = function ( xhr ) { };
+
+            THREE.Loader.Handlers.add( /\.dds$/i, new THREE.DDSLoader() );
+
+            var mtlLoader = new THREE.MTLLoader();
+            mtlLoader.setPath( 'models/male02/' );
+            mtlLoader.load( 'male02_dds.mtl', function( materials ) {
+
+                materials.preload();
+
+                var objLoader = new THREE.OBJLoader();
+                objLoader.setMaterials( materials );
+                objLoader.setPath( 'models/male02/' );
+                objLoader.load( 'male02.obj', function ( object ) {
+
+                    object.position.set(manPos.x, manPos.y, manPos.z);
+                    object.scale.x = object.scale.y = object.scale.z = 0.05;
+                    object.rotation.set(0,0,1.1);
+                    object.rotation.set(1.585,0,0);
+
+                    manObj = object;
+                    scene.add( object );
+
+                }, onProgress, onError );
+
+            });
         }
 
         var t = 0;
@@ -86,9 +141,26 @@
             t++;
 //            cube.rotation.set(t/100, 0, 0);
             sphere.rotation.set(0,0,t/100);
+            if (!!manObj)
+                 manObj.position.set(manPos.x, manPos.y, manPos.z);
             renderer.clear();
             renderer.render(scene, camera);
             window.requestAnimationFrame(loop);
+        }
+
+        function initKeyBoard() {
+            keyboardJS.bind('w', function(e) {
+                manPos.x += 1;
+            });
+            keyboardJS.bind('s', function(e) {
+                manPos.x -= 1;
+            });
+            keyboardJS.bind('a', function(e) {
+                manPos.y += 1;
+            });
+            keyboardJS.bind('d', function(e) {
+                manPos.y -= 1;
+            });
         }
 
         function threeStart() {
@@ -97,6 +169,7 @@
             initScene();
             initLight();
             initObject();
+            initKeyBoard();
             loop();
             renderer.clear();
             renderer.render(scene, camera);
