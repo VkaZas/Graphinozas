@@ -11,6 +11,9 @@
     <script src="./js/loaders/OBJLoader.js"></script>
     <script src="./js/loaders/DDSLoader.js"></script>
     <script src="./js/keyboard/keyboard.js"></script>
+    <script src="./js/exporters/OBJExporter.js"></script>
+    <script src="./js/Blob.js"></script>
+    <script src="./js/FileSaver.min.js"></script>
     <style type="text/css">
         body, html {
             height: 100%;
@@ -32,6 +35,7 @@
 </head>
 
 <body onload="threeStart();">
+<input type="button" id="export" value="export">
 <div id="canvas-frame"></div>
 <button class="btn" onclick="toggleVisitMode()">Visit Mode</button>
 </body>
@@ -445,5 +449,23 @@
         renderer.clear();
         renderer.render(scene, camera);
     }
+
+     
+
+    exportButton = document.getElementById( 'export' );
+    exportButton.addEventListener( 'click', function exportToObj() {
+
+        var exporter = new THREE.OBJExporter();
+        var result = exporter.parse( scene );
+
+        saveAs(
+              new Blob(
+                  [result]
+                , {type: "text/plain;charset=" + document.characterSet}
+            )
+            , "scene" + ".obj"
+        );
+    });
+
 </script>
 </html>
