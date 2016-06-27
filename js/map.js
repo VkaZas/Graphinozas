@@ -16,6 +16,29 @@ function getGeoMap() {
 }
 
 function getMapArr(size, ofsX, ofsZ) {
+    var textureLoader = new THREE.TextureLoader();
+    cubeMat = new THREE.MeshStandardMaterial( {
+        roughness: 0.7,
+        color: 0xffffff,
+        bumpScale: 0.002,
+        metalness: 0.2
+    });
+    textureLoader.load( "./textures/brick_diffuse.jpg", function( map ) {
+        map.wrapS = THREE.RepeatWrapping;
+        map.wrapT = THREE.RepeatWrapping;
+        map.anisotropy = 4;
+        map.repeat.set( 1, 1 );
+        cubeMat.map = map;
+        cubeMat.needsUpdate = true;
+    } );
+    textureLoader.load( "./textures/brick_bump.jpg", function( map ) {
+        map.wrapS = THREE.RepeatWrapping;
+        map.wrapT = THREE.RepeatWrapping;
+        map.anisotropy = 4;
+        map.repeat.set( 1, 1 );
+        cubeMat.bumpMap = map;
+        cubeMat.needsUpdate = true;
+    } );
     this.ofsX = (ofsX || 9 / 2) * size;
     this.ofsZ = (ofsZ || 9 / 2) * size;
     this.size = size || 10;
@@ -36,12 +59,14 @@ function getMapArr(size, ofsX, ofsZ) {
         {
             var tmpCube = new THREE.Mesh(
                 new THREE.CubeGeometry(this.size,this.size,this.size),
-                new THREE.MeshLambertMaterial({color:0x0000FF})
+                cubeMat
             );
             tmpCube.position.set(
                 (i / width) * this.size - this.ofsX,
                 size / 2,
                 (i % width) * this.size - this.ofsZ);
+            tmpCube.castShadow = true;
+            tmpCube.receiveShadow = true;
             cube.push(tmpCube);
         }
     return cube;

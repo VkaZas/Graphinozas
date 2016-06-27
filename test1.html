@@ -62,6 +62,12 @@
     var cameraDir;
     var cameraMov = 0;
 
+    /*Light related variables*/
+    var hemiLight;
+    var sunLight;
+    var moonLight;
+
+
     function initCanvas() {
         var $canvas = $("#canvas-frame");
         $canvas.width(document.body.clientWidth);
@@ -108,10 +114,50 @@
         light = new THREE.DirectionalLight(0xFFFFFF, 1.0);
         light.position.set( 40, 0, 50 );
         light.castShadow = true;
-        scene.add(light);
+//        scene.add(light);
 
         abt_light = new THREE.AmbientLight(0x050505, 1.0);
         scene.add(abt_light);
+
+        /*Hemisphere light*/
+        hemiLight = new THREE.HemisphereLight(0xddeeff, 0x0f0e0d, 0.8);
+//        scene.add(hemiLight);
+
+        /*Sunlight*/
+        var sunRadius = 20;
+        var sunIntensity = 100000;
+        var sunGeometry = new THREE.SphereGeometry(sunRadius, 16, 16);
+        sunLight = new THREE.PointLight(0xffee88, sunIntensity, 250, 2);
+        var sunMat = new THREE.MeshStandardMaterial({
+            emissive: 0xffffee,
+            emissiveIntensity: sunLight.intensity / Math.pow(sunRadius,2),
+            color: 0xFFFFFF
+        });
+        sunLight.add(new THREE.Mesh(sunGeometry, sunMat));
+        sunLight.position.set(0, 200, 0);
+        sunLight.castShadow = true;
+        scene.add(sunLight);
+
+        /*Moonlight*/
+        var moonRadius = 10;
+        var moonIntensity = 10000;
+        var moonGeometry = new THREE.SphereGeometry(moonRadius, 16, 16);
+        moonLight = new THREE.PointLight(0x191970, moonIntensity, 250, 2);
+        var moonMat = new THREE.MeshStandardMaterial({
+            emissive: 0x191970,
+            emissiveIntensity: moonLight.intensity / Math.pow(moonRadius,2),
+            color: 0x191970
+        });
+        moonLight.add(new THREE.Mesh(moonGeometry, moonMat));
+        moonLight.position.set(0, 200, 0);
+        moonLight.castShadow = true;
+        scene.add(moonLight);
+//
+        /*Global options*/
+        renderer.shadowMap.enabled = true;
+        renderer.physicallyCorrectLights = true;
+        renderer.gammaInput = true;
+        renderer.gammaOutput = true;
     }
 
     var cube, sphere, plane;
@@ -130,22 +176,61 @@
         /*Add an axis*/
         var axis = new THREE.AxisHelper(20);
         scene.add(axis);
-        /**/
 
         /*Add an geo-ground*/
         var mapArr = getMapArr(10);
         scene.addArr(mapArr);
         collidableMeshList = collidableMeshList.concat(mapArr);  // prepare for collision test
-        /**/
+
 
         /*Add an player*/
-//        initPlayer();
         initPlayer1(0);
-        /**/
+
 
         /*Add a skybox*/
         initSkyBox();
-        /**/
+
+        /*Add floor*/
+        initFloor();
+    }
+
+    function initFloor() {
+        floorMat = new THREE.MeshStandardMaterial( {
+            roughness: 0.8,
+            color: 0xffffff,
+            metalness: 0.2,
+            bumpScale: 0.0005,
+        });
+        var textureLoader = new THREE.TextureLoader();
+        textureLoader.load( "textures/hardwood2_diffuse.jpg", function( map ) {
+            map.wrapS = THREE.RepeatWrapping;
+            map.wrapT = THREE.RepeatWrapping;
+            map.anisotropy = 4;
+            map.repeat.set( 10, 24 );
+            floorMat.map = map;
+            floorMat.needsUpdate = true;
+        } );
+        textureLoader.load( "textures/hardwood2_bump.jpg", function( map ) {
+            map.wrapS = THREE.RepeatWrapping;
+            map.wrapT = THREE.RepeatWrapping;
+            map.anisotropy = 4;
+            map.repeat.set( 10, 24 );
+            floorMat.bumpMap = map;
+            floorMat.needsUpdate = true;
+        } );
+        textureLoader.load( "textures/hardwood2_roughness.jpg", function( map ) {
+            map.wrapS = THREE.RepeatWrapping;
+            map.wrapT = THREE.RepeatWrapping;
+            map.anisotropy = 4;
+            map.repeat.set( 10, 24 );
+            floorMat.roughnessMap = map;
+            floorMat.needsUpdate = true;
+        } );
+        var floorGeometry = new THREE.PlaneBufferGeometry( 200, 200, 20, 20 );
+        var floorMesh = new THREE.Mesh( floorGeometry, floorMat );
+        floorMesh.receiveShadow = true;
+        floorMesh.rotation.x = -Math.PI / 2.0;
+        scene.add( floorMesh );
     }
 
     function initPlayer() {
@@ -212,9 +297,9 @@
     }
 
     function initSkyBox() {
-        var imagePrefix = "images/dawnmountain-";
-        var directions  = ["xpos", "xneg", "ypos", "yneg", "zpos", "zneg"];
-        var imageSuffix = ".png";
+        var imagePrefix = "images/dark-s_";
+        var directions  = ["px", "nx", "py", "ny", "pz", "nz"];
+        var imageSuffix = ".jpg";
         var skyGeometry = new THREE.CubeGeometry( 500, 500, 500 );
 
         var materialArray = [];
@@ -230,7 +315,6 @@
 
     function loop() {
         /*camera rotation*/
-        var timer = -0.0002 * Date.now();
         if (visitMode) {
             var ofsAng = - (mouseX - midX) / midX * PI / 2 / 70;
             cameraDir.set(
@@ -273,9 +357,16 @@
         }
         /**/
 
-
-
-
+        var timer = -0.0002 * Date.now();
+        /*sunlight movement*/
+        sunLight.position.y = 100 * Math.sin(timer);
+        sunLight.position.z = 100 * Math.cos(timer);
+        /**/
+        
+        /*moonlight movement*/
+        moonLight.position.y = - 100 * Math.sin(timer);
+        moonLight.position.z = - 100 * Math.cos(timer);
+        /**/
         renderer.clear();
         renderer.render(scene, camera);
         window.requestAnimationFrame(loop);
