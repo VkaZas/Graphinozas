@@ -146,69 +146,89 @@ function checkCollision(orgObj, collList) {
     }
 }
 
-function getWall(mirCam) {
+function getWall(mirCam, ang) {
+    ang = ang || 0;
     
     var mirrorMaterial = new THREE.MeshBasicMaterial({
         envMap : mirCam.renderTarget
     });
+
+    var wallMat;
+    var textureLoader = new THREE.TextureLoader();
+
+    wallMat = new THREE.MeshStandardMaterial( {
+        roughness: 0.1,
+        color: 0xff0000,
+        bumpScale: 0.002,
+        metalness: 0.9
+    });
+    textureLoader.load( "./textures/metal.jpg", function( map ) {
+        map.wrapS = THREE.RepeatWrapping;
+        map.wrapT = THREE.RepeatWrapping;
+        map.anisotropy = 6;
+        map.repeat.set( 1, 1 );
+        wallMat.map = map;
+        wallMat.needsUpdate = true;
+    } );
     
     var group = new THREE.Group();
     var object = [];
     object[0] = new THREE.Mesh(//mesh��three.js��һ����
-        new THREE.CubeGeometry(1,4,1),//��״
-        mirrorMaterial
+        new THREE.CubeGeometry(1,4,1),
+        wallMat
     );
     object[0].position.set(0, 0, 0);
 
     object[1] = new THREE.Mesh(
         new THREE.CylinderGeometry(1, 1, 0.2, 20, 0),
-        mirrorMaterial
+        wallMat
     );
     object[1].position.set(0, 2, 0);
 
     object[2] = new THREE.Mesh(
         new THREE.CylinderGeometry(0.5, 0.5, 0.6, 20, 0),
-        mirrorMaterial
+        wallMat
     );
     object[2].position.set(0, 2.3, 0);
 
     object[3] = new THREE.Mesh(
         new THREE.CylinderGeometry(0.6, 0.6, 0.1, 20, 0),
-        mirrorMaterial
+        wallMat
     );
     object[3].position.set(0, 2.65, 0);
 
     object[4] = new THREE.Mesh(
         new THREE.CylinderGeometry(0.7, 0.7, 0.4, 20, 0),
-        mirrorMaterial
+        wallMat
     );
     object[4].position.set(0, 2.9, 0);
 
     object[4] = new THREE.Mesh(
         new THREE.CylinderGeometry(0.8, 0.8, 0.15, 20, 0),
-        mirrorMaterial
+        wallMat
     );
     object[4].position.set(0, 2.95, 0);
 
     object[5] = new THREE.Mesh(
-        new THREE.CubeGeometry(55, 3.5, 0.2),
-        mirrorMaterial
+        new THREE.CubeGeometry(50, 3.5, 0.2),
+        wallMat
     );
-    object[5].position.set(28, -0.25, 0);
+    object[5].position.set(24, -0.25, 0);
 
     object[6] = new THREE.Mesh(
-        new THREE.CubeGeometry(55, 0.2, 0.8),
+        new THREE.CubeGeometry(50, 0.2, 0.8),
         mirrorMaterial
     );
-    object[6].position.set(28, 1.6, 0);
+    object[6].position.set(24, 1.6, 0);
 
     object[6] = new THREE.Mesh(
-        new THREE.CubeGeometry(54, 3, 0.6),
+        new THREE.CubeGeometry(50, 3, 0.6),
         mirrorMaterial
     );
-    object[6].position.set(28, -0.25, 0);
+    object[6].position.set(24, -0.25, 0);
     for (var i=0; i<=6; i++) group.add(object[i]);
     group.scale.set(1.7,3,3);
+    group.rotateY(ang);
     
     
     return group;

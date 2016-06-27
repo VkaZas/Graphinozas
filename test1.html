@@ -169,26 +169,27 @@
     function initMirrorWalls() {
         mirrorCamera = new THREE.CubeCamera(0.1, 500, 512);
         scene.add(mirrorCamera);
+        mirrorCamera.position.set(0, 25, 0);
 
-        walls[0] = getWall(mirrorCamera);
+        walls[0] = getWall(mirrorCamera, Math.PI / 2);
         walls[0].position.set(-40,10,40);
-        mirrorCamera.position = walls[0].position;
-//        wall.rotateZ(Math.Pi / 2);
+//        walls[0].rotateY(Math.Pi / 4);
         scene.add(walls[0]);
 
 
         walls[1] = getWall(mirrorCamera);
         walls[1].position.set(-40,10,-40);
         scene.add(walls[1]);
+//        walls[1].rotateY(Math.Pi / 4);
 
 
-        walls[2] = getWall(mirrorCamera);
+        walls[2] = getWall(mirrorCamera, Math.PI);
         walls[2].position.set(40,10,40);
 //        wall.rotateX(Math.Pi / 2);
         scene.add(walls[2]);
 
 
-        walls[3] = getWall(mirrorCamera);
+        walls[3] = getWall(mirrorCamera, - Math.PI  / 2);
         walls[3].position.set(40,10,-40);
         scene.add(walls[3]);
 
@@ -230,6 +231,11 @@
         /*Add floor*/
         initFloor();
 
+        //test_bomb
+        initbomb(30,5);
+        //bomb_animation
+        animation();
+
     }
 
     function initFloor() {
@@ -270,13 +276,10 @@
         floorMesh.rotation.x = -Math.PI / 2.0;
         scene.add( floorMesh );
     }
-        /**/
 
-        //test_bomb
-        initbomb(30,5);
-        //bomb_animation
-        animation();
-    }
+
+
+
 
     var bomb_num = 0;
     var bomb_obj = [];
