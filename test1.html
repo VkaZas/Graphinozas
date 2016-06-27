@@ -11,7 +11,9 @@
     <script src="./js/loaders/OBJLoader.js"></script>
     <script src="./js/loaders/DDSLoader.js"></script>
     <script src="./js/keyboard/keyboard.js"></script>
-    <script src="./js/getcanvaspixelcolor.js"></script>
+    <script src="./js/exporters/OBJExporter.js"></script>
+    <script src="./js/Blob.js"></script>
+    <script src="./js/FileSaver.min.js"></script>
     <style type="text/css">
         body, html {
             height: 100%;
@@ -33,6 +35,7 @@
 </head>
 
 <body onload="threeStart();">
+<input type="button" id="export" value="export">
 <div id="canvas-frame"></div>
 <button class="btn" onclick="toggleVisitMode()">Visit Mode</button>
 </body>
@@ -267,6 +270,121 @@
         floorMesh.rotation.x = -Math.PI / 2.0;
         scene.add( floorMesh );
     }
+        /**/
+
+        //test_bomb
+        initbomb(30,5);
+        //bomb_animation
+        animation();
+    }
+
+    var bomb_num = 0;
+    var bomb_obj = [];
+    var cube;
+    var boxMesh,objMesh = undefined;
+    var bomb_range = 10;
+    function initbomb(axis_x,axis_z) {
+        bomb_num++;
+        var onProgress = function ( xhr ) {
+            if ( xhr.lengthComputable ) {
+                var percentComplete = xhr.loaded / xhr.total * 100;
+                console.log( Math.round(percentComplete, 2) + '% downloaded' );
+            }
+        };
+
+        var onError = function ( xhr ) { };
+
+        var manager = new THREE.LoadingManager();
+
+        var mtlLoader = new THREE.MTLLoader();
+        mtlLoader.setPath( 'models/bomb/' );
+        mtlLoader.load( 'bomb.mtl', function( materials ) {
+
+            materials.preload();
+
+            var objLoader = new THREE.OBJLoader();
+            objLoader.setMaterials( materials );
+            objLoader.setPath( 'models/bomb/' );
+            objLoader.load( 'bomb.obj', function ( object ) {
+
+                object.position.z = axis_z;
+                object.position.x = axis_x;
+                scene.add(object);
+                bomb_obj.push(object);
+
+                var t=setTimeout(function(){
+                    scene.remove(object);
+                    for(var m in manObj){
+                        var man = manObj[m];
+                        //alert(man.position.x+"-"+man.position.z+"-"+object.position.x+"-"+object.position.z);
+                        if ((man.position.x  >= object.position.x - bomb_range)&&(man.position.x  <= object.position.x + bomb_range)&&(man.position.z  >= object.position.z - bomb_range)&&(man.position.z  <= object.position.z + bomb_range)) {
+                                alert("player "+m+" die -> rebirth");
+                                man.position.x = 0;
+                                man.position.z = 0;
+                                movOfs[m].x = 0;
+                                movOfs[m].z = 0;
+                                manPos[m].x = 0;
+                                manPos[m].z = 0;
+                        };
+                    }
+                    //alert("爆炸时间到！");
+                    //initbomb(3*Math.floor(Math.random()*10),3*Math.floor(Math.random()*10));
+                },5000);
+
+            }, onProgress, onError );
+        });
+    }
+
+    var frame=0;
+    var frameDirection=0;
+    var frame_arr = [];
+    var frameDirection_arr = [];
+    // 帧循环、游戏循环
+    function animation()
+    {
+        //mesh.rotation.y +=0.01;
+        //boxMesh.rotateY(0.01);
+
+        for (var o in bomb_obj)
+        {
+            if (frameDirection_arr[o] == undefined) {
+                frameDirection_arr[o] = 0;
+            };
+            var objMesh = bomb_obj[o];
+            if(objMesh != undefined){
+                if(frameDirection_arr[o]==0){
+                    objMesh.rotateY(0.1);
+                    objMesh.scale.x +=0.01;
+                    objMesh.scale.y +=0.01;
+                    objMesh.scale.z +=0.01;
+                    if (frame_arr[o] == undefined) {
+                        frame_arr[o] = 0;
+                    };
+                    frame_arr[o]++;
+                    //frame++;
+                }
+                else{
+                    objMesh.rotateY(0.1);
+                    objMesh.scale.x -=0.01;
+                    objMesh.scale.y -=0.01;
+                    objMesh.scale.z -=0.01;
+                    if (frame_arr[o] == undefined) {
+                        frame_arr[o] = 0;
+                    };
+                    frame_arr[o]--;
+                    //frame--;
+                }
+                if(frame_arr[o]>5)
+                    frameDirection_arr[o] = 1;
+                else if (frame_arr[o]<-20)
+                    frameDirection_arr[o] = 0;
+            }
+        }
+
+        renderer.render(scene, camera);
+        requestAnimationFrame(animation);
+
+    }
 
     function initPlayer() {
         playerNum++;
@@ -397,7 +515,7 @@
         sunLight.position.y = 100 * Math.sin(timer);
         sunLight.position.z = 100 * Math.cos(timer);
         /**/
-        
+
         /*moonlight movement*/
         moonLight.position.y = - 100 * Math.sin(timer);
         moonLight.position.z = - 100 * Math.cos(timer);
@@ -442,6 +560,10 @@
         keyboardJS.bind('e', function(e) {
             cameraMov = -1;
         });
+        keyboardJS.bind('b', function(e) {
+            var man_current = manObj[0];
+            initbomb(man_current.position.x,man_current.position.z);
+        });
     }
 
     function toggleVisitMode() {
@@ -460,5 +582,23 @@
         renderer.clear();
         renderer.render(scene, camera);
     }
+
+
+
+    exportButton = document.getElementById( 'export' );
+    exportButton.addEventListener( 'click', function exportToObj() {
+
+        var exporter = new THREE.OBJExporter();
+        var result = exporter.parse( scene );
+
+        saveAs(
+              new Blob(
+                  [result]
+                , {type: "text/plain;charset=" + document.characterSet}
+            )
+            , "scene" + ".obj"
+        );
+    });
+
 </script>
 </html>
