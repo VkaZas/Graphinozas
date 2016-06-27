@@ -22,27 +22,45 @@
             cursor: pointer;
             background-color: #EEEEEE;
         }
+        .btn {
+            position: absolute;
+            top: 200px;
+            width: 200px;
+            height: 100px;
+        }
     </style>
 </head>
 
 <body onload="threeStart();">
 <div id="canvas-frame"></div>
+<button class="btn" onclick="toggleVisitMode()">Visit Mode</button>
 </body>
 <script>
-    var playerNum = 0;
+
     var renderer;
     var width, height;
-    var manObj = [];
-    var mouseY = 0;
+
     var minHeight = 10, maxHeight = 40;
     var collidableMeshList = [];
+
+    /*Player related variables*/
+    var playerNum = 0;
     var movFlag = [];
     var manPos = [];
     var movOfs = [];
     var manSize = new THREE.Vector3(2,8,2);
+    var manObj = [];
+    var modelPath = [ "models/antimage/antimage.json", "models/antimage/antimage.json"];
     var stepLen = 0.8;
 
-    var modelPath = [ "models/antimage/antimage.json", "models/antimage/antimage.json"];
+    /*Camera related variables*/
+    var PI = 3.1415926;
+    var visitMode = false;
+    var cameraAngelOfs = 0;
+    var mouseX = 0, mouseY = 0;
+    var midX = window.innerWidth / 2, midY = window.innerHeight / 2;
+    var cameraDir;
+    var cameraMov = 0;
 
     function initCanvas() {
         var $canvas = $("#canvas-frame");
@@ -58,25 +76,26 @@
         document.getElementById('canvas-frame').appendChild(renderer.domElement);
         renderer.setClearColor(0xFFFFFF, 1.0);
 //            renderer.shadowMapEnabled = true;
+        document.addEventListener( 'mousemove', onDocumentMouseMove, false );
     }
 
     var camera;
     function initCamera() {
         camera = new THREE.PerspectiveCamera( 45 , width / height , 1 , 10000 );
-        camera.position.x = 200;
-        camera.position.y = 20;
-        camera.position.z = 200;
+        camera.position.x = 300;
+        camera.position.y = 30;
+        camera.position.z = 300;
         camera.up.x = 0;
         camera.up.y = 1;
         camera.up.z = 0;
         camera.lookAt( {x:0, y:0, z:0 } );
-        document.addEventListener( 'mousemove', onDocumentMouseMove, false );
+        cameraDir = new THREE.Vector3(-300, -30, -300);
     }
 
     function onDocumentMouseMove(event) {
-
-        mouseY = ( event.clientY - window.innerHeight );
-
+        mouseX = -( event.clientX - window.innerWidth);
+        mouseY = -( event.clientY - window.innerHeight );
+//        console.log(mouseX,mouseY);
     }
 
     var scene;
@@ -212,13 +231,29 @@
     function loop() {
         /*camera rotation*/
         var timer = -0.0002 * Date.now();
-        camera.position.x = 50 * Math.cos( timer );
-        camera.position.y += ( - mouseY - 500 - camera.position.y) * .0005;
-        if (camera.position.y < minHeight) camera.position.y = minHeight;
-        if (camera.position.y > maxHeight) camera.position.y = maxHeight;
-
-        camera.position.z = 50 * Math.sin( timer );
-        camera.lookAt(scene.position);
+        if (visitMode) {
+            var ofsAng = - (mouseX - midX) / midX * PI / 2 / 70;
+            cameraDir.set(
+                    cameraDir.x * Math.cos(ofsAng) - cameraDir.z * Math.sin(ofsAng),
+                    (mouseY - midY) / midY *1.5 + cameraDir.y,
+                    cameraDir.x * Math.sin(ofsAng) + cameraDir.z * Math.cos(ofsAng)
+            );
+            var destVec = camera.position.clone().add(cameraDir);
+            camera.lookAt(destVec);
+            var sclVec = new THREE.Vector3(5, 5, 5);
+            var ofsVec = cameraDir.clone().normalize().divide(sclVec);
+            if (cameraMov > 0) {
+                camera.position.add(ofsVec);
+            } else if (cameraMov < 0) {
+                camera.position.sub(ofsVec);
+            }
+            cameraMov = 0;
+        } else {
+            camera.position.x = 60 * Math.cos( cameraAngelOfs );
+            camera.position.y = 30;
+            camera.position.z = 60 * Math.sin( cameraAngelOfs );
+            camera.lookAt(scene.position);
+        }
         /**/
 
         /*player movement*/
@@ -236,7 +271,6 @@
             }
             movFlag[i] = false;
         }
-
         /**/
 
 
@@ -264,6 +298,22 @@
             movOfs[0].z = -stepLen;
             movFlag[0] = true;
         });
+        keyboardJS.bind('+', function(e) {
+            cameraAngelOfs += .01;
+        });
+        keyboardJS.bind('-', function(e) {
+            cameraAngelOfs += .01;
+        });
+        keyboardJS.bind('q', function(e) {
+            cameraMov = 1;
+        });
+        keyboardJS.bind('e', function(e) {
+            cameraMov = -1;
+        });
+    }
+
+    function toggleVisitMode() {
+        visitMode = !visitMode;
     }
 
     function threeStart() {
