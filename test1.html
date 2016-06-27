@@ -11,6 +11,7 @@
     <script src="./js/loaders/OBJLoader.js"></script>
     <script src="./js/loaders/DDSLoader.js"></script>
     <script src="./js/keyboard/keyboard.js"></script>
+    <script src="./js/getcanvaspixelcolor.js"></script>
     <style type="text/css">
         body, html {
             height: 100%;
@@ -85,17 +86,17 @@
         document.addEventListener( 'mousemove', onDocumentMouseMove, false );
     }
 
-    var camera;
+    var camera, mirrorCamera;
     function initCamera() {
         camera = new THREE.PerspectiveCamera( 45 , width / height , 1 , 10000 );
-        camera.position.x = 300;
-        camera.position.y = 30;
-        camera.position.z = 300;
+        camera.position.x = 400;
+        camera.position.y = 40;
+        camera.position.z = 400;
         camera.up.x = 0;
         camera.up.y = 1;
         camera.up.z = 0;
         camera.lookAt( {x:0, y:0, z:0 } );
-        cameraDir = new THREE.Vector3(-300, -30, -300);
+        cameraDir = new THREE.Vector3(-400, -40, -400);
     }
 
     function onDocumentMouseMove(event) {
@@ -121,7 +122,7 @@
 
         /*Hemisphere light*/
         hemiLight = new THREE.HemisphereLight(0xddeeff, 0x0f0e0d, 0.8);
-//        scene.add(hemiLight);
+        scene.add(hemiLight);
 
         /*Sunlight*/
         var sunRadius = 20;
@@ -158,9 +159,41 @@
         renderer.physicallyCorrectLights = true;
         renderer.gammaInput = true;
         renderer.gammaOutput = true;
+        renderer.setFaceCulling( THREE.CullFaceNone );
+    }
+
+    var walls = [];
+    function initMirrorWalls() {
+        mirrorCamera = new THREE.CubeCamera(0.1, 500, 512);
+        scene.add(mirrorCamera);
+
+        walls[0] = getWall(mirrorCamera);
+        walls[0].position.set(-40,10,40);
+        mirrorCamera.position = walls[0].position;
+//        wall.rotateZ(Math.Pi / 2);
+        scene.add(walls[0]);
+
+
+        walls[1] = getWall(mirrorCamera);
+        walls[1].position.set(-40,10,-40);
+        scene.add(walls[1]);
+
+
+        walls[2] = getWall(mirrorCamera);
+        walls[2].position.set(40,10,40);
+//        wall.rotateX(Math.Pi / 2);
+        scene.add(walls[2]);
+
+
+        walls[3] = getWall(mirrorCamera);
+        walls[3].position.set(40,10,-40);
+        scene.add(walls[3]);
+
+        collidableMeshList.concat(walls);
     }
 
     var cube, sphere, plane;
+    var mirrorCube, mirrorCubeCamera;
     function initObject(){
 
         /*todo: this part can be modified as a rotating sun*/
@@ -182,16 +215,18 @@
         scene.addArr(mapArr);
         collidableMeshList = collidableMeshList.concat(mapArr);  // prepare for collision test
 
+        /*Add walls*/
+        initMirrorWalls();
 
         /*Add an player*/
         initPlayer1(0);
-
 
         /*Add a skybox*/
         initSkyBox();
 
         /*Add floor*/
         initFloor();
+
     }
 
     function initFloor() {
@@ -199,7 +234,7 @@
             roughness: 0.8,
             color: 0xffffff,
             metalness: 0.2,
-            bumpScale: 0.0005,
+            bumpScale: 0.0005
         });
         var textureLoader = new THREE.TextureLoader();
         textureLoader.load( "textures/hardwood2_diffuse.jpg", function( map ) {
@@ -274,7 +309,7 @@
 
     function initPlayer1(x) {
         playerNum++;
-        manPos[x] = new  THREE.Vector3(0, 0, 0);
+        manPos[x] = new  THREE.Vector3(35, 10, 35);
         movOfs[x] = new  THREE.Vector3(0, 0, 0);
         movFlag[x] = false;
         var loader = new THREE.JSONLoader();
@@ -286,7 +321,7 @@
             var mesh = new THREE.Mesh(geometry, faceMaterial);
             var s = 0.05;
             mesh.scale.set(s, s, s);
-            mesh.position.set(0,10,0);
+            mesh.position.set(30,10,30);
             mesh.rotation.set(1.5,0,0);
             mesh.matrixAutoUpdate = true;
             mesh.updateMatrix();
@@ -367,6 +402,12 @@
         moonLight.position.y = - 100 * Math.sin(timer);
         moonLight.position.z = - 100 * Math.cos(timer);
         /**/
+
+        /*update mirror materials*/
+        for (i=0;i<4;i++) walls[i].visible = false;
+        mirrorCamera.updateCubeMap( renderer, scene );
+        for (i=0;i<4;i++) walls[i].visible = true;
+
         renderer.clear();
         renderer.render(scene, camera);
         window.requestAnimationFrame(loop);

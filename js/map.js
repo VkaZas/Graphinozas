@@ -15,7 +15,37 @@ function getGeoMap() {
     return geoObj;
 }
 
+function getWalls(size, ofsX, ofsZ) {
+    var i;
+    var walls = [];
+    this.ofsX = (ofsX || 9 / 2) * size;
+    this.ofsZ = (ofsZ || 9 / 2) * size;
+    this.size = size || 10;
+    for (i=-1; i<=9; i++) {
+        var wall;
+        wall = getWall();
+        wall.position.set(i * this.size - this.ofsX, size / 2, -1 * this.size - this.ofsZ);
+        walls.push(wall);
+
+        wall = getWall();
+        wall.position.set(i * this.size - this.ofsX, size / 2, 9 * this.size - this.ofsZ);
+        walls.push(wall);
+
+        wall = getWall();
+        wall.position.set(-1 * this.size - this.ofsX, size / 2, i * this.size - this.ofsZ);
+        wall.rotateY(Math.PI/2);
+        walls.push(wall);
+        
+        wall = getWall();
+        wall.position.set(9 * this.size - this.ofsX, size / 2, i * this.size - this.ofsZ);
+        wall.rotateY(Math.PI/2);
+        walls.push(wall);
+    }
+    return walls;
+}
+
 function getMapArr(size, ofsX, ofsZ) {
+    var i;
     var textureLoader = new THREE.TextureLoader();
     cubeMat = new THREE.MeshStandardMaterial( {
         roughness: 0.7,
@@ -54,7 +84,7 @@ function getMapArr(size, ofsX, ofsZ) {
         0, 1, 1, 0, 0, 0, 0, 1, 0,
         0, 0, 1, 0, 1, 0, 1, 1, 0,
         0, 0, 0, 0, 0, 0, 0, 0, 0];
-    for(var i = 0; i < width * height; i++)
+    for(i = 0; i < width * height; i++)
         if(maps[i] == 1)
         {
             var tmpCube = new THREE.Mesh(
@@ -62,7 +92,7 @@ function getMapArr(size, ofsX, ofsZ) {
                 cubeMat
             );
             tmpCube.position.set(
-                (i / width) * this.size - this.ofsX,
+                Math.floor(i / width) * this.size - this.ofsX,
                 size / 2,
                 (i % width) * this.size - this.ofsZ);
             tmpCube.castShadow = true;
@@ -115,3 +145,73 @@ function checkCollision(orgObj, collList) {
             return true;
     }
 }
+
+function getWall(mirCam) {
+    
+    var mirrorMaterial = new THREE.MeshBasicMaterial({
+        envMap : mirCam.renderTarget
+    });
+    
+    var group = new THREE.Group();
+    var object = [];
+    object[0] = new THREE.Mesh(//mesh��three.js��һ����
+        new THREE.CubeGeometry(1,4,1),//��״
+        mirrorMaterial
+    );
+    object[0].position.set(0, 0, 0);
+
+    object[1] = new THREE.Mesh(
+        new THREE.CylinderGeometry(1, 1, 0.2, 20, 0),
+        mirrorMaterial
+    );
+    object[1].position.set(0, 2, 0);
+
+    object[2] = new THREE.Mesh(
+        new THREE.CylinderGeometry(0.5, 0.5, 0.6, 20, 0),
+        mirrorMaterial
+    );
+    object[2].position.set(0, 2.3, 0);
+
+    object[3] = new THREE.Mesh(
+        new THREE.CylinderGeometry(0.6, 0.6, 0.1, 20, 0),
+        mirrorMaterial
+    );
+    object[3].position.set(0, 2.65, 0);
+
+    object[4] = new THREE.Mesh(
+        new THREE.CylinderGeometry(0.7, 0.7, 0.4, 20, 0),
+        mirrorMaterial
+    );
+    object[4].position.set(0, 2.9, 0);
+
+    object[4] = new THREE.Mesh(
+        new THREE.CylinderGeometry(0.8, 0.8, 0.15, 20, 0),
+        mirrorMaterial
+    );
+    object[4].position.set(0, 2.95, 0);
+
+    object[5] = new THREE.Mesh(
+        new THREE.CubeGeometry(55, 3.5, 0.2),
+        mirrorMaterial
+    );
+    object[5].position.set(28, -0.25, 0);
+
+    object[6] = new THREE.Mesh(
+        new THREE.CubeGeometry(55, 0.2, 0.8),
+        mirrorMaterial
+    );
+    object[6].position.set(28, 1.6, 0);
+
+    object[6] = new THREE.Mesh(
+        new THREE.CubeGeometry(54, 3, 0.6),
+        mirrorMaterial
+    );
+    object[6].position.set(28, -0.25, 0);
+    for (var i=0; i<=6; i++) group.add(object[i]);
+    group.scale.set(1.7,3,3);
+    
+    
+    return group;
+}
+
+
