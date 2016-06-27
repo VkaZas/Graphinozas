@@ -3,181 +3,280 @@
 <head>
     <meta charset="UTF-8">
     <title>Three.js Example 1</title>
+    <script src="./js/jquery/jquery-1.11.3.min.js"></script>
     <script src="./js/three/three.js"></script>
+
     <script src="./js/map.js"></script>
     <script src="./js/loaders/MTLLoader.js"></script>
     <script src="./js/loaders/OBJLoader.js"></script>
     <script src="./js/loaders/DDSLoader.js"></script>
     <script src="./js/keyboard/keyboard.js"></script>
     <style type="text/css">
+        body, html {
+            height: 100%;
+            margin: 0;
+            padding: 0;
+        }
         div#canvas-frame{
             border: none;
             cursor: pointer;
-            width: 1280px;
-            height: 768px;
             background-color: #EEEEEE;
         }
     </style>
-    <script>
-        var renderer;
-        var width, height;
-        var manPos = {x:0,y:0,z:0};
-        var manObj;
-        function initThree() {
-            width = document.getElementById('canvas-frame').clientWidth;
-            height = document.getElementById('canvas-frame').clientHeight;
-            renderer = new THREE.WebGLRenderer({antialias: true});
-            renderer.setSize(width, height );
-            document.getElementById('canvas-frame').appendChild(renderer.domElement);
-            renderer.setClearColor(0xFFFFFF, 1.0);
-//            renderer.shadowMapEnabled = true;
-        }
-
-        var camera;
-        function initCamera() {
-            camera = new THREE.PerspectiveCamera( 45 , width / height , 1 , 10000 );
-            camera.position.x = -20;
-            camera.position.y = -20;
-            camera.position.z = 20;
-            camera.up.x = 0;
-            camera.up.y = 0;
-            camera.up.z = 1;
-            camera.lookAt( {x:0, y:0, z:0 } );
-        }
-
-        var scene;
-        function initScene() {
-            scene = new THREE.Scene();
-        }
-
-        var light, abt_light;
-        function initLight() {
-            light = new THREE.DirectionalLight(0xFFFFFF, 1.0);
-            light.position.set( 40, 0, 50 );
-            light.castShadow = true;
-            scene.add(light);
-
-            abt_light = new THREE.AmbientLight(0x000000, 1.0);
-            scene.add(abt_light);
-        }
-
-        var cube, sphere, plane;
-        function initObject(){
-//            cube = new THREE.Mesh(
-//                    new THREE.CubeGeometry(20,20,20),                //形状の設定
-//                    new THREE.MeshLambertMaterial({color: 0xff0000, ambient: 0x0000FF}) //材質の設定
-//            );
-//            scene.add(cube);
-//            cube.position.set(0,0,25);
-//            cube.castShadow = true;
-
-            var texture1 = new THREE.ImageUtils.loadTexture('./textures/planet1.jpg'),
-//                    texture2 = new THREE.ImageUtils.loadTexture('./textures/face1.jpg');
-            sphere = new THREE.Mesh(
-                    new THREE.SphereGeometry(20, 20, 20),
-                    new THREE.MeshLambertMaterial({map: texture1})
-            );
-//            scene.add(sphere);
-
-            sphere.position.set(0,0,0);
-
-//            plane = new THREE.Mesh(
-//                    new THREE.PlaneGeometry(100, 100),
-//                    new THREE.MeshLambertMaterial({color: 0x6495ED})
-//            );
-//            scene.add(plane);
-//            plane.position.set(0,0,0);
-//            plane.receiveShadow = true;
-
-            /*Add an axis*/
-            var axis = getAxisArr(10);
-            scene.addArr(axis);
-
-            /*Add an geo-ground*/
-            var geoGround = getGeoMap();
-            scene.add(geoGround);
-
-            /*Add an player*/
-//            var robot = getRobot();
-//            scene.add(robot);
-
-            var onProgress = function ( xhr ) {
-                if ( xhr.lengthComputable ) {
-                    var percentComplete = xhr.loaded / xhr.total * 100;
-                    console.log( Math.round(percentComplete, 2) + '% downloaded' );
-                }
-            };
-
-            var onError = function ( xhr ) { };
-
-            THREE.Loader.Handlers.add( /\.dds$/i, new THREE.DDSLoader() );
-
-            var mtlLoader = new THREE.MTLLoader();
-            mtlLoader.setPath( 'models/male02/' );
-            mtlLoader.load( 'male02_dds.mtl', function( materials ) {
-
-                materials.preload();
-
-                var objLoader = new THREE.OBJLoader();
-                objLoader.setMaterials( materials );
-                objLoader.setPath( 'models/male02/' );
-                objLoader.load( 'male02.obj', function ( object ) {
-
-                    object.position.set(manPos.x, manPos.y, manPos.z);
-                    object.scale.x = object.scale.y = object.scale.z = 0.05;
-                    object.rotation.set(0,0,1.1);
-                    object.rotation.set(1.585,0,0);
-
-                    manObj = object;
-                    scene.add( object );
-
-                }, onProgress, onError );
-
-            });
-        }
-
-        var t = 0;
-        function loop() {
-            t++;
-//            cube.rotation.set(t/100, 0, 0);
-            sphere.rotation.set(0,0,t/100);
-            if (!!manObj)
-                 manObj.position.set(manPos.x, manPos.y, manPos.z);
-            renderer.clear();
-            renderer.render(scene, camera);
-            window.requestAnimationFrame(loop);
-        }
-
-        function initKeyBoard() {
-            keyboardJS.bind('w', function(e) {
-                manPos.x += 1;
-            });
-            keyboardJS.bind('s', function(e) {
-                manPos.x -= 1;
-            });
-            keyboardJS.bind('a', function(e) {
-                manPos.y += 1;
-            });
-            keyboardJS.bind('d', function(e) {
-                manPos.y -= 1;
-            });
-        }
-
-        function threeStart() {
-            initThree();
-            initCamera();
-            initScene();
-            initLight();
-            initObject();
-            initKeyBoard();
-            loop();
-            renderer.clear();
-            renderer.render(scene, camera);
-        }
-    </script>
 </head>
 
 <body onload="threeStart();">
 <div id="canvas-frame"></div>
 </body>
+<script>
+    var playerNum = 0;
+    var renderer;
+    var width, height;
+    var manObj = [];
+    var mouseY = 0;
+    var minHeight = 10, maxHeight = 40;
+    var collidableMeshList = [];
+    var movFlag = [];
+    var manPos = [];
+    var movOfs = [];
+    var manSize = new THREE.Vector3(2,8,2);
+    var stepLen = 0.8;
+
+    var modelPath = [ "models/antimage/antimage.json", "models/antimage/antimage.json"];
+
+    function initCanvas() {
+        var $canvas = $("#canvas-frame");
+        $canvas.width(document.body.clientWidth);
+        $canvas.height(document.body.clientHeight);
+    }
+
+    function initThree() {
+        width = document.getElementById('canvas-frame').clientWidth;
+        height = document.getElementById('canvas-frame').clientHeight;
+        renderer = new THREE.WebGLRenderer({antialias: true});
+        renderer.setSize(width, height );
+        document.getElementById('canvas-frame').appendChild(renderer.domElement);
+        renderer.setClearColor(0xFFFFFF, 1.0);
+//            renderer.shadowMapEnabled = true;
+    }
+
+    var camera;
+    function initCamera() {
+        camera = new THREE.PerspectiveCamera( 45 , width / height , 1 , 10000 );
+        camera.position.x = 200;
+        camera.position.y = 20;
+        camera.position.z = 200;
+        camera.up.x = 0;
+        camera.up.y = 1;
+        camera.up.z = 0;
+        camera.lookAt( {x:0, y:0, z:0 } );
+        document.addEventListener( 'mousemove', onDocumentMouseMove, false );
+    }
+
+    function onDocumentMouseMove(event) {
+
+        mouseY = ( event.clientY - window.innerHeight );
+
+    }
+
+    var scene;
+    function initScene() {
+        scene = new THREE.Scene();
+    }
+
+    var light, abt_light;
+    function initLight() {
+        light = new THREE.DirectionalLight(0xFFFFFF, 1.0);
+        light.position.set( 40, 0, 50 );
+        light.castShadow = true;
+        scene.add(light);
+
+        abt_light = new THREE.AmbientLight(0x050505, 1.0);
+        scene.add(abt_light);
+    }
+
+    var cube, sphere, plane;
+    function initObject(){
+
+        /*todo: this part can be modified as a rotating sun*/
+//        var texture1 = new THREE.ImageUtils.loadTexture('./textures/planet1.jpg');
+//        var sphere = new THREE.Mesh(
+//                    new THREE.SphereGeometry(20, 20, 20),
+//                    new THREE.MeshLambertMaterial({map: texture1})
+//            );
+//        scene.add(sphere);
+//        sphere.position.set(0,0,0);
+
+
+        /*Add an axis*/
+        var axis = new THREE.AxisHelper(20);
+        scene.add(axis);
+        /**/
+
+        /*Add an geo-ground*/
+        var mapArr = getMapArr(10);
+        scene.addArr(mapArr);
+        collidableMeshList = collidableMeshList.concat(mapArr);  // prepare for collision test
+        /**/
+
+        /*Add an player*/
+        initPlayer();
+        initPlayer1(1);
+        /**/
+
+        /*Add a skybox*/
+        initSkyBox();
+        /**/
+    }
+
+    function initPlayer() {
+        playerNum++;
+        manPos[0] = new  THREE.Vector3(0, 0, 0);
+        movOfs[0] = new  THREE.Vector3(0, 0, 0);
+        movFlag[0] = false;
+        var onProgress = function ( xhr ) {
+            if ( xhr.lengthComputable ) {
+                var percentComplete = xhr.loaded / xhr.total * 100;
+                console.log( Math.round(percentComplete, 2) + '% downloaded' );
+            }
+        };
+
+        var onError = function ( xhr ) { };
+
+        THREE.Loader.Handlers.add( /\.dds$/i, new THREE.DDSLoader() );
+
+        var mtlLoader = new THREE.MTLLoader();
+        mtlLoader.setPath( 'models/male02/' );
+        mtlLoader.load( 'male02_dds.mtl', function( materials ) {
+
+            materials.preload();
+
+            var objLoader = new THREE.OBJLoader();
+            objLoader.setMaterials( materials );
+            objLoader.setPath( 'models/male02/' );
+            objLoader.load( 'male02.obj', function ( object ) {
+
+                object.position.set(manPos[0].x, manPos[0].y, manPos[0].z);
+                object.scale.x = object.scale.y = object.scale.z = 0.05;
+
+                manObj[0] = object;
+                manObj[0].objSize = manSize;
+                scene.add( object );
+
+            }, onProgress, onError );
+
+        });
+    }
+
+    function initPlayer1(x) {
+        playerNum++;
+        manPos[x] = new  THREE.Vector3(0, 0, 0);
+        movOfs[x] = new  THREE.Vector3(0, 0, 0);
+        movFlag[x] = false;
+        var loader = new THREE.JSONLoader();
+        loader.load(modelPath[x], function(geometry, materials) {
+            var material = materials[0];
+            material.morphTargets = true;
+            material.color.setHex(0xaaaaFF);
+            var faceMaterial = new THREE.MultiMaterial(materials);
+            var mesh = new THREE.Mesh(geometry, faceMaterial);
+            var s = 0.05;
+            mesh.scale.set(s, s, s);
+            mesh.position.set(0,10,0);
+            mesh.rotation.set(1.5,0,0);
+            mesh.matrixAutoUpdate = false;
+            mesh.updateMatrix();
+            scene.add(mesh);
+            manObj[x] = mesh;
+            manObj[x].objSize = manSize;
+        });
+    }
+
+    function initSkyBox() {
+        var imagePrefix = "images/dawnmountain-";
+        var directions  = ["xpos", "xneg", "ypos", "yneg", "zpos", "zneg"];
+        var imageSuffix = ".png";
+        var skyGeometry = new THREE.CubeGeometry( 500, 500, 500 );
+
+        var materialArray = [];
+        for (var i = 0; i < 6; i++)
+            materialArray.push( new THREE.MeshBasicMaterial({
+                map: THREE.ImageUtils.loadTexture( imagePrefix + directions[i] + imageSuffix ),
+                side: THREE.BackSide
+            }));
+        var skyMaterial = new THREE.MeshFaceMaterial( materialArray );
+        var skyBox = new THREE.Mesh( skyGeometry, skyMaterial );
+        scene.add( skyBox );
+    }
+
+    function loop() {
+        /*camera rotation*/
+        var timer = -0.0002 * Date.now();
+        camera.position.x = 50 * Math.cos( timer );
+        camera.position.y += ( - mouseY - 500 - camera.position.y) * .0005;
+        if (camera.position.y < minHeight) camera.position.y = minHeight;
+        if (camera.position.y > maxHeight) camera.position.y = maxHeight;
+
+        camera.position.z = 50 * Math.sin( timer );
+        camera.lookAt(scene.position);
+        /**/
+
+        /*player movement*/
+        for (var i=0; i<playerNum; i++) {
+            if (!!manObj[i]) {
+                if (movFlag[i]) {
+                    manPos[i].add(movOfs[i]);
+                    manObj[i].position.set(manPos[i].x, manPos[i].y, manPos[i].z);
+                    if (checkCollision(manObj[i], collidableMeshList)) {
+                        manPos[i].sub(movOfs[i]);
+                        manObj[i].position.set(manPos[i].x, manPos[i].y, manPos[i].z);
+                    }
+                    movOfs[i].set(0, 0, 0);
+                }
+            }
+            movFlag[i] = false;
+        }
+
+        /**/
+
+
+
+
+        renderer.clear();
+        renderer.render(scene, camera);
+        window.requestAnimationFrame(loop);
+    }
+
+    function initKeyBoard() {
+        keyboardJS.bind('w', function(e) {
+            movOfs[0].x = stepLen;
+            movFlag[0] = true;
+        });
+        keyboardJS.bind('s', function(e) {
+            movOfs[0].x = -stepLen;
+            movFlag[0] = true;
+        });
+        keyboardJS.bind('a', function(e) {
+            movOfs[0].z = stepLen;
+            movFlag[0] = true;
+        });
+        keyboardJS.bind('d', function(e) {
+            movOfs[0].z = -stepLen;
+            movFlag[0] = true;
+        });
+    }
+
+    function threeStart() {
+        initCanvas();
+        initThree();
+        initCamera();
+        initScene();
+        initLight();
+        initObject();
+        initKeyBoard();
+        loop();
+        renderer.clear();
+        renderer.render(scene, camera);
+    }
+</script>
 </html>
