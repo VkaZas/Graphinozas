@@ -13,6 +13,7 @@
     <script src="./js/keyboard/keyboard.js"></script>
     <script src="./js/exporters/OBJExporter.js"></script>
     <script src="./js/Blob.js"></script>
+    <script src="./js/canvas-toBlob.js"></script>
     <script src="./js/FileSaver.min.js"></script>
     <style type="text/css">
         body, html {
@@ -35,7 +36,8 @@
 </head>
 
 <body onload="threeStart();">
-<input type="button" id="export" value="export">
+<input id="saveImage" type="button" value="SaveImage">
+<input type="button" id="export" value="Export">
 <div id="canvas-frame"></div>
 <button class="btn" onclick="toggleVisitMode()">Visit Mode</button>
 </body>
@@ -81,7 +83,10 @@
     function initThree() {
         width = document.getElementById('canvas-frame').clientWidth;
         height = document.getElementById('canvas-frame').clientHeight;
-        renderer = new THREE.WebGLRenderer({antialias: true});
+        renderer = new THREE.WebGLRenderer({
+            antialias: true,
+            preserveDrawingBuffer: true
+        });
         renderer.setSize(width, height );
         document.getElementById('canvas-frame').appendChild(renderer.domElement);
         renderer.setClearColor(0xFFFFFF, 1.0);
@@ -600,6 +605,28 @@
                 , {type: "text/plain;charset=" + document.characterSet}
             )
             , "scene" + ".obj"
+        );
+    });
+
+    function dataURLtoBlob(dataurl) {
+        var arr = dataurl.split(','), mime = arr[0].match(/:(.*?);/)[1],
+            bstr = atob(arr[1]), n = bstr.length, u8arr = new Uint8Array(n);
+        while(n--){
+            u8arr[n] = bstr.charCodeAt(n);
+        }
+        return new Blob([u8arr], {type:mime});
+    }
+
+    saveButton = document.getElementById("saveImage");  
+    saveButton.addEventListener( 'click', function () {  
+        var mycanvas = document.getElementsByTagName('canvas');
+        console.log(mycanvas[0]);  
+        var dataurl = mycanvas[0].toDataURL("image/png");
+
+        var blob = dataURLtoBlob(dataurl);
+        saveAs(
+              blob
+            , "scene" + ".png"
         );
     });
 
