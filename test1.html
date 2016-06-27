@@ -120,8 +120,8 @@
         /**/
 
         /*Add an player*/
-        initPlayer();
-        initPlayer1(1);
+//        initPlayer();
+        initPlayer1(0);
         /**/
 
         /*Add a skybox*/
@@ -184,7 +184,7 @@
             mesh.scale.set(s, s, s);
             mesh.position.set(0,10,0);
             mesh.rotation.set(1.5,0,0);
-            mesh.matrixAutoUpdate = false;
+            mesh.matrixAutoUpdate = true;
             mesh.updateMatrix();
             scene.add(mesh);
             manObj[x] = mesh;
