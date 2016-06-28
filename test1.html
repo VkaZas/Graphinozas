@@ -229,6 +229,7 @@
 
         /*Add an player*/
         initPlayer1(0);
+        initPlayer1(1);
 
         /*Add a skybox*/
         initSkyBox();
@@ -237,7 +238,7 @@
         initFloor();
 
         //test_bomb
-        initbomb(30,5);
+        //initbomb(30,5);
         //bomb_animation
         animation();
 
@@ -327,12 +328,14 @@
                         //alert(man.position.x+"-"+man.position.z+"-"+object.position.x+"-"+object.position.z);
                         if ((man.position.x  >= object.position.x - bomb_range)&&(man.position.x  <= object.position.x + bomb_range)&&(man.position.z  >= object.position.z - bomb_range)&&(man.position.z  <= object.position.z + bomb_range)) {
                                 alert("player "+m+" die -> rebirth");
-                                man.position.x = 0;
-                                man.position.z = 0;
-                                movOfs[m].x = 0;
-                                movOfs[m].z = 0;
-                                manPos[m].x = 0;
-                                manPos[m].z = 0;
+                                man.position.x = 35;
+                                man.position.z = 35;
+                                movOfs[m].x = 35;
+                                movOfs[m].z = 35;
+                                manPos[m].x = 35;
+                                manPos[m].z = 35;
+                                //manPos[m] = new  THREE.Vector3(35, 5, 35);
+                                //movOfs[m] = new  THREE.Vector3(0, 0, 0);
                         };
                     }
                     //alert("爆炸时间到！");
@@ -435,7 +438,7 @@
 
     function initPlayer1(x) {
         playerNum++;
-        manPos[x] = new  THREE.Vector3(35, 10, 35);
+        manPos[x] = new  THREE.Vector3(35, 1, 35);
         movOfs[x] = new  THREE.Vector3(0, 0, 0);
         movFlag[x] = false;
         var loader = new THREE.JSONLoader();
@@ -447,7 +450,7 @@
             var mesh = new THREE.Mesh(geometry, faceMaterial);
             var s = 0.05;
             mesh.scale.set(s, s, s);
-            mesh.position.set(30,10,30);
+            mesh.position.set(30,1,30);
             mesh.rotation.set(1.5,0,0);
             mesh.matrixAutoUpdate = true;
             mesh.updateMatrix();
@@ -556,6 +559,30 @@
             movOfs[0].z = -stepLen;
             movFlag[0] = true;
         });
+        keyboardJS.bind('c', function(e) {
+            var man_current = manObj[0];
+            initbomb(man_current.position.x,man_current.position.z);
+        });
+        keyboardJS.bind('i', function(e) {
+            movOfs[1].x = stepLen;
+            movFlag[1] = true;
+        });
+        keyboardJS.bind('k', function(e) {
+            movOfs[1].x = -stepLen;
+            movFlag[1] = true;
+        });
+        keyboardJS.bind('j', function(e) {
+            movOfs[1].z = stepLen;
+            movFlag[1] = true;
+        });
+        keyboardJS.bind('l', function(e) {
+            movOfs[1].z = -stepLen;
+            movFlag[1] = true;
+        });
+        keyboardJS.bind('n', function(e) {
+            var man_current = manObj[1];
+            initbomb(man_current.position.x,man_current.position.z);
+        });        
         keyboardJS.bind('+', function(e) {
             cameraAngelOfs += .01;
         });
@@ -567,10 +594,6 @@
         });
         keyboardJS.bind('e', function(e) {
             cameraMov = -1;
-        });
-        keyboardJS.bind('b', function(e) {
-            var man_current = manObj[0];
-            initbomb(man_current.position.x,man_current.position.z);
         });
     }
 
